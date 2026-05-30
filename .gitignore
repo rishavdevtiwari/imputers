@@ -1,26 +1,33 @@
-# Python
-__pycache__/
-*.py[cod]
+# Virtual environments
 .venv/
 venv/
 env/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
 *.egg-info/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
+dist/
+build/
 
-# Models / cached data (keep dirs via .gitkeep, ignore contents)
-data/raw/*
-data/clean/*
-!data/raw/.gitkeep
-!data/clean/.gitkeep
-*.joblib
-*.pkl
+# ML artifacts (keep directory via .gitkeep)
+models/*.joblib
+models/*.json
+!models/.gitkeep
 
-# Reports (keep dir, ignore generated json)
-reports/*
-!reports/.gitkeep
+# Data (keep structure, ignore large CSVs)
+data/raw/*.csv
+data/processed/*.csv
+!data/**/.gitkeep
 
-# OS / editor
+# IDE & OS
+.idea/
+.vscode/
 .DS_Store
-.ipynb_checkpoints/
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Profiling outputs
+*.html
