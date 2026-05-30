@@ -1,0 +1,16 @@
+crop,disease,pathogen,temp_min_c,temp_max_c,humidity_min_pct,rainfall_pref,soil_ph_min,soil_ph_max,soil_factor,max_yield_loss,source
+potato,late_blight,Phytophthora infestans,10,20,90,wet,4.5,9.0,poor_drainage,0.80,CABI/FAO
+potato,common_scab,Streptomyces scabies,20,30,0,dry,5.5,9.0,alkaline_dry,0.25,CABI
+tomato,late_blight,Phytophthora infestans,10,20,90,wet,4.5,9.0,poor_drainage,1.00,CABI/FAO
+tomato,early_blight,Alternaria solani,24,29,80,humid,4.5,9.0,none,0.50,CABI
+tomato,bacterial_wilt,Ralstonia solanacearum,25,35,80,wet,5.0,7.0,waterlogged,0.90,CABI
+rice,blast,Magnaporthe oryzae,25,28,90,wet,4.5,9.0,high_nitrogen,1.00,CABI/FAO
+rice,bacterial_leaf_blight,Xanthomonas oryzae,25,34,80,wet,4.5,9.0,none,0.70,CABI
+maize,northern_leaf_blight,Exserohilum turcicum,18,27,80,humid,4.5,9.0,none,0.50,CABI
+maize,gray_leaf_spot,Cercospora zeae-maydis,24,30,90,humid,4.5,9.0,none,0.60,CABI
+wheat,stripe_rust,Puccinia striiformis,10,15,80,moist,4.5,9.0,none,0.70,CABI/FAO
+wheat,leaf_rust,Puccinia triticina,15,22,80,moist,4.5,9.0,none,0.40,CABI
+cauliflower,clubroot,Plasmodiophora brassicae,18,25,80,wet,4.5,6.0,acidic,0.70,CABI
+cabbage,black_rot,Xanthomonas campestris,25,30,80,humid,4.5,9.0,none,0.60,CABI
+onion,purple_blotch,Alternaria porri,21,30,80,humid,4.5,9.0,none,0.40,CABI
+lentil,rust,Uromyces viciae-fabae,17,22,80,moist,4.5,9.0,none,0.50,CABI
