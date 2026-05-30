@@ -10,6 +10,8 @@ joblib>=1.3.0
 # Frontend & visualization
 streamlit>=1.32.0
 plotly>=5.20.0
+folium>=0.16.0
+streamlit-folium>=0.18.0
 
 # HTTP & profiling
 requests>=2.31.0

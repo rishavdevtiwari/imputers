@@ -11,7 +11,7 @@ dist/
 build/
 
 # ML artifacts (keep directory via .gitkeep)
-models/*.joblib
+# models/*.joblib
 models/*.json
 !models/.gitkeep
 
