@@ -1,0 +1,30 @@
+{
+  "dataset": "district_monthly_climate",
+  "before": {
+    "completeness": 1.0,
+    "validity": 1.0,
+    "consistency": 1.0,
+    "uniqueness": 1.0,
+    "dqi": 100.0
+  },
+  "after": {
+    "completeness": 1.0,
+    "validity": 1.0,
+    "consistency": 1.0,
+    "uniqueness": 1.0,
+    "dqi": 100.0
+  },
+  "rows": 29016,
+  "dropped_redundant_columns": [
+    "TS",
+    "T2MWET",
+    "WS50M",
+    "WS50M_MAX",
+    "WS50M_MIN",
+    "WS50M_RANGE",
+    "WS10M_MAX",
+    "WS10M_MIN",
+    "WS10M_RANGE"
+  ],
+  "note": "Source is already pristine (no NaN/dups/sentinels). Cleaning removes collinear columns to reduce multicollinearity."
+}

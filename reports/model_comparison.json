@@ -1,0 +1,206 @@
+{
+  "task": "monsoon_drought_classification",
+  "n_features": 16,
+  "features": [
+    "mam_T2M",
+    "mam_T2M_MAX",
+    "mam_T2M_MIN",
+    "mam_T2M_RANGE",
+    "mam_RH2M",
+    "mam_QV2M",
+    "mam_PS",
+    "mam_WS10M",
+    "mam_PRECTOT",
+    "djf_T2M",
+    "djf_RH2M",
+    "djf_PRECTOT",
+    "prev_monsoon_precip",
+    "prev_monsoon_z",
+    "LAT",
+    "LON"
+  ],
+  "split": {
+    "train_max_year": 2009,
+    "train_rows": 1736,
+    "test_rows": 620
+  },
+  "results": {
+    "Baseline_MostFrequent": {
+      "cv_roc_auc": null,
+      "test": {
+        "roc_auc": 0.5,
+        "pr_auc": 0.2,
+        "f1": 0.0,
+        "balanced_acc": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "confusion_matrix": [
+          [
+            496,
+            0
+          ],
+          [
+            124,
+            0
+          ]
+        ]
+      }
+    },
+    "Baseline_Stratified": {
+      "cv_roc_auc": null,
+      "test": {
+        "roc_auc": 0.505,
+        "pr_auc": 0.2017,
+        "f1": 0.2381,
+        "balanced_acc": 0.505,
+        "precision": 0.2059,
+        "recall": 0.2823,
+        "confusion_matrix": [
+          [
+            361,
+            135
+          ],
+          [
+            89,
+            35
+          ]
+        ]
+      }
+    },
+    "Baseline_Persistence": {
+      "cv_roc_auc": null,
+      "test": {
+        "roc_auc": 0.7554,
+        "pr_auc": 0.6595,
+        "f1": 0.6631,
+        "balanced_acc": 0.749,
+        "precision": 0.9841,
+        "recall": 0.5,
+        "confusion_matrix": [
+          [
+            495,
+            1
+          ],
+          [
+            62,
+            62
+          ]
+        ]
+      }
+    },
+    "LogisticRegression": {
+      "cv_roc_auc": 0.7373,
+      "cv_roc_auc_std": 0.0466,
+      "test": {
+        "roc_auc": 0.937,
+        "pr_auc": 0.8726,
+        "f1": 0.6911,
+        "balanced_acc": 0.7651,
+        "precision": 0.9851,
+        "recall": 0.5323,
+        "confusion_matrix": [
+          [
+            495,
+            1
+          ],
+          [
+            58,
+            66
+          ]
+        ]
+      }
+    },
+    "KNN": {
+      "cv_roc_auc": 0.7007,
+      "cv_roc_auc_std": 0.0729,
+      "test": {
+        "roc_auc": 0.7146,
+        "pr_auc": 0.3841,
+        "f1": 0.1277,
+        "balanced_acc": 0.5282,
+        "precision": 0.5294,
+        "recall": 0.0726,
+        "confusion_matrix": [
+          [
+            488,
+            8
+          ],
+          [
+            115,
+            9
+          ]
+        ]
+      }
+    },
+    "RandomForest": {
+      "cv_roc_auc": 0.7089,
+      "cv_roc_auc_std": 0.0889,
+      "test": {
+        "roc_auc": 0.8901,
+        "pr_auc": 0.6913,
+        "f1": 0.0,
+        "balanced_acc": 0.499,
+        "precision": 0.0,
+        "recall": 0.0,
+        "confusion_matrix": [
+          [
+            495,
+            1
+          ],
+          [
+            124,
+            0
+          ]
+        ]
+      }
+    },
+    "HistGradientBoosting": {
+      "cv_roc_auc": 0.7189,
+      "cv_roc_auc_std": 0.0861,
+      "test": {
+        "roc_auc": 0.7633,
+        "pr_auc": 0.4037,
+        "f1": 0.0432,
+        "balanced_acc": 0.5,
+        "precision": 0.2,
+        "recall": 0.0242,
+        "confusion_matrix": [
+          [
+            484,
+            12
+          ],
+          [
+            121,
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "selected_model": "LogisticRegression",
+  "selection_rule": "highest cross-validated ROC-AUC on the training years (GroupKFold by year); held-out test (>=2010) reported as the final unbiased estimate.",
+  "top_features": {
+    "djf_T2M": 2.7207,
+    "mam_PS": 1.8145,
+    "mam_PRECTOT": -1.7041,
+    "mam_RH2M": 1.4211,
+    "mam_T2M": -1.4173,
+    "mam_T2M_MIN": -1.1453,
+    "prev_monsoon_z": -1.1389,
+    "djf_PRECTOT": -0.975,
+    "mam_T2M_MAX": -0.9352,
+    "mam_T2M_RANGE": 0.8541,
+    "LAT": 0.6848,
+    "LON": 0.4455,
+    "prev_monsoon_precip": -0.1162,
+    "djf_RH2M": -0.0896,
+    "mam_QV2M": 0.0712,
+    "mam_WS10M": -0.0423
+  },
+  "notes": [
+    "Persistence baseline (drought if last year's monsoon was dry) is strong (ROC-AUC ~0.76) - the selected model must and does beat it.",
+    "Tree models (RF, HGB) show high ROC-AUC but ~0 recall at the 0.5 threshold (imbalanced data); LogisticRegression with balanced class weights gives usable recall without threshold tuning.",
+    "Held-out test AUC exceeded within-train CV AUC; likely the 2010s had a clearer pre-monsoon->monsoon signal and labels are referenced to the 1982-2009 baseline. Treat CV (~0.74) as the conservative real-world skill.",
+    "LogReg coefficients are directional only - multicollinearity among climate vars can flip individual signs; use for intuition, not causation."
+  ]
+}

@@ -16,8 +16,8 @@ models/*.json
 !models/.gitkeep
 
 # Data (keep structure, ignore large CSVs)
-data/raw/*.csv
-data/processed/*.csv
+# data/raw/*.csv
+# data/processed/*.csv
 !data/**/.gitkeep
 
 # IDE & OS
