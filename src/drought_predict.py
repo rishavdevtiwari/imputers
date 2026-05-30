@@ -1,12 +1,11 @@
 """Inference for the monsoon drought-risk model.
 
-Loads the trained model + feature list + tuned operating threshold and scores
-rows from the processed dataset. Importable by the Streamlit dashboard, and
-runnable from the CLI:
+Loads the trained model + feature list and scores rows from the processed
+dataset. Importable by the Streamlit dashboard, and runnable from the CLI:
 
-    python3 src/drought_predict.py --district Dhading --year 2018
-    python3 src/drought_predict.py --district Dhading            # all years
-    python3 src/drought_predict.py --list                        # list districts
+    python3 src/predict_drought.py --district Dhading --year 2018
+    python3 src/predict_drought.py --district Dhading            # all years
+    python3 src/predict_drought.py --list                        # list districts
 """
 from __future__ import annotations
 
@@ -19,11 +18,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = ROOT / "models" / "drought_model.joblib"
 FEATURES_PATH = ROOT / "models" / "drought_features.joblib"
-THRESHOLD_PATH = ROOT / "models" / "drought_threshold.joblib"
 DATA_PATH = ROOT / "data" / "processed" / "drought_dataset.csv"
 
 _SETUP_HINT = ("Artifacts not found. Build them first:\n"
-               "  python3 src/drought_preprocess.py\n"
+               "  python3 src/drought_build_dataset.py\n"
                "  python3 src/drought_model_selection.py")
 
 
@@ -38,38 +36,24 @@ def load_artifacts():
     return joblib.load(MODEL_PATH), joblib.load(FEATURES_PATH)
 
 
-def load_threshold(default: float = 0.5) -> float:
-    """Tuned operating threshold persisted by model selection (recall-targeted).
-
-    Falls back to `default` if the artifact is missing (older models)."""
-    if THRESHOLD_PATH.exists():
-        meta = joblib.load(THRESHOLD_PATH)
-        return float(meta.get("threshold", default)) if isinstance(meta, dict) else float(meta)
-    return default
-
-
 def load_dataset() -> pd.DataFrame:
     if not DATA_PATH.exists():
         raise FileNotFoundError(_SETUP_HINT)
     return pd.read_csv(DATA_PATH)
 
 
-def predict_frame(df: pd.DataFrame, threshold: float | None = None,
+def predict_frame(df: pd.DataFrame, threshold: float = 0.5,
                   model=None, features=None) -> pd.DataFrame:
-    """Add drought_prob + drought_pred columns to a frame of feature rows.
-
-    threshold=None uses the persisted tuned operating threshold."""
+    """Add drought_prob + drought_pred columns to a frame of feature rows."""
     if model is None:
         model, features = load_artifacts()
-    if threshold is None:
-        threshold = load_threshold()
     out = df.copy()
     out["drought_prob"] = model.predict_proba(out[features])[:, 1].round(4)
     out["drought_pred"] = (out["drought_prob"] >= threshold).astype(int)
     return out
 
 
-def predict_district(district: str, threshold: float | None = None,
+def predict_district(district: str, threshold: float = 0.5,
                      model=None, features=None, data=None) -> pd.DataFrame:
     """Score every available year for one district."""
     data = load_dataset() if data is None else data
@@ -79,8 +63,7 @@ def predict_district(district: str, threshold: float | None = None,
     return predict_frame(sub, threshold, model, features)
 
 
-def predict_district_year(district: str, year: int,
-                          threshold: float | None = None) -> dict:
+def predict_district_year(district: str, year: int, threshold: float = 0.5) -> dict:
     """Score a single district-year; returns a tidy dict."""
     row = predict_district(district, threshold)
     row = row[row["YEAR"] == year]
@@ -100,8 +83,7 @@ def _cli() -> None:
     p = argparse.ArgumentParser(description="Drought-risk inference")
     p.add_argument("--district")
     p.add_argument("--year", type=int)
-    p.add_argument("--threshold", type=float, default=None,
-                   help="decision threshold (default: persisted tuned threshold)")
+    p.add_argument("--threshold", type=float, default=0.5)
     p.add_argument("--list", action="store_true", help="list available districts")
     args = p.parse_args()
 

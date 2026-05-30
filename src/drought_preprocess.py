@@ -13,21 +13,11 @@ Pipeline
      - monsoon (JJAS, months 6-9) precipitation  -> source of the LABEL
      - pre-monsoon MAM (Mar-May) + winter DJF     -> antecedent FEATURES
      - previous-year monsoon (persistence)        -> antecedent FEATURE
-4. FEATURE ENGINEERING (all leakage-free, knowable BEFORE the monsoon):
-     - per-district ANOMALY z-scores (train-only mean/std) for each seasonal
-       variable — removes the district baseline so the model sees the deviation
-       that actually precedes drought (raw temps are ~0-corr; their anomalies
-       are not).
-     - VAPOUR-PRESSURE DEFICIT (VPD) proxy for the pre-monsoon — an
-       agronomic dryness/atmospheric-demand indicator.
-     - pre-monsoon vs winter rainfall ratio.
-     - MULTI-YEAR PERSISTENCE: previous-2-year monsoon z + trailing 3-year
-       mean monsoon z (droughts cluster across years — strongest single signal).
-5. LABEL: SPI-like z-score of monsoon precip per district, standardized using
+4. LABEL: SPI-like z-score of monsoon precip per district, standardized using
    TRAIN years only (leakage-free); drought = z < THRESHOLD.
-6. Write data/processed/drought_dataset.csv + reports/{dqi_report,eda_summary}.json
+5. Write data/processed/drought_dataset.csv + reports/{dqi_report,eda_summary}.json
 
-Run:  python3 src/drought_preprocess.py     (from repo root)
+Run:  python3 src/build_dataset.py     (from repo root)
 """
 from __future__ import annotations
 
@@ -46,14 +36,6 @@ TRAIN_MAX_YEAR = 2009          # train = years <= this; test = later (time split
 DROUGHT_Z = -0.8               # SPI-like threshold: driest ~1 in 5 monsoons
 MONSOON = [6, 7, 8, 9]         # JJAS
 PRE_MONSOON = [3, 4, 5]        # MAM
-
-# Seasonal variables we turn into leakage-free per-district anomaly z-scores.
-# (raw values carry the district baseline; the ANOMALY is what precedes drought)
-ANOM_COLS = [
-    "mam_PRECTOT", "mam_RH2M", "mam_QV2M", "mam_T2M", "mam_T2M_MAX",
-    "mam_T2M_RANGE", "mam_PS", "mam_WS10M",
-    "djf_PRECTOT", "djf_RH2M", "djf_T2M",
-]
 
 # Redundant / highly collinear columns to drop (EDA found |r| > 0.95).
 # Kept: T2M, T2M_MAX, T2M_MIN, T2M_RANGE, RH2M, QV2M, PS, PRECTOT, WS10M.
@@ -149,35 +131,6 @@ def _season_agg(df: pd.DataFrame, months: list, prefix: str) -> pd.DataFrame:
     }).reset_index()
 
 
-def _vpd_kpa(t2m: pd.Series, rh2m: pd.Series) -> pd.Series:
-    """Vapour-pressure deficit (kPa) via Tetens saturation curve.
-
-    VPD = es(T) * (1 - RH/100). High VPD = thirsty atmosphere = drought stress.
-    A standard agronomic dryness indicator computed only from antecedent vars.
-    """
-    es = 0.6108 * np.exp(17.27 * t2m / (t2m + 237.3))      # saturation VP, kPa
-    return (es * (1.0 - rh2m / 100.0)).clip(lower=0.0)
-
-
-def _add_anomalies(data: pd.DataFrame, cols: list, train_max_year: int) -> list:
-    """Add per-district anomaly z-scores using TRAIN-only mean/std (no leakage).
-
-    Returns the list of new column names. For each seasonal variable we subtract
-    the district's training-period mean and divide by its training-period std,
-    so the feature expresses 'how unusual is this season for THIS district'.
-    """
-    train = data[data["YEAR"] <= train_max_year]
-    new_cols = []
-    for col in cols:
-        stats = train.groupby("DISTRICT")[col].agg(["mean", "std"])
-        mean = data["DISTRICT"].map(stats["mean"])
-        std = data["DISTRICT"].map(stats["std"]).replace(0, np.nan)
-        zname = f"{col}_z"
-        data[zname] = ((data[col] - mean) / std).fillna(0.0)
-        new_cols.append(zname)
-    return new_cols
-
-
 def process(df: pd.DataFrame) -> tuple:
     """Aggregate to seasonal; build leakage-free label + antecedent features."""
     static = df.groupby("DISTRICT").agg(LAT=("LAT", "first"),
@@ -209,42 +162,21 @@ def process(df: pd.DataFrame) -> tuple:
     monsoon["monsoon_z"] = (monsoon["monsoon_precip"] - monsoon["m_mean"]) / monsoon["m_std"]
     monsoon["drought"] = (monsoon["monsoon_z"] < DROUGHT_Z).astype(int)
 
-    # ---- multi-year persistence features (past monsoon outcomes only) ---- #
-    mon = monsoon[["DISTRICT", "YEAR", "monsoon_precip", "monsoon_z"]].sort_values(
-        ["DISTRICT", "YEAR"]).copy()
-    g = mon.groupby("DISTRICT")
-    # previous-year monsoon (lag 1)
-    mon["prev_monsoon_precip"] = g["monsoon_precip"].shift(1)
-    mon["prev_monsoon_z"] = g["monsoon_z"].shift(1)
-    # two-years-ago monsoon (lag 2)
-    mon["prev2_monsoon_z"] = g["monsoon_z"].shift(2)
-    # trailing 3-year mean of past monsoon z (drought clustering)
-    mon["roll3_monsoon_z"] = (g["monsoon_z"].shift(1)
-                              .rolling(3, min_periods=1).mean().reset_index(0, drop=True))
-    lags = mon[["DISTRICT", "YEAR", "prev_monsoon_precip", "prev_monsoon_z",
-                "prev2_monsoon_z", "roll3_monsoon_z"]]
+    # persistence feature: previous-year monsoon
+    prev = monsoon[["DISTRICT", "YEAR", "monsoon_precip", "monsoon_z"]].copy()
+    prev["YEAR"] += 1
+    prev = prev.rename(columns={"monsoon_precip": "prev_monsoon_precip",
+                                "monsoon_z": "prev_monsoon_z"})
 
     # assemble: each label-year joined to its antecedent features
     data = monsoon[["DISTRICT", "YEAR", "monsoon_precip", "monsoon_z", "drought"]]
     data = (data.merge(mam, on=["DISTRICT", "YEAR"], how="left")
                 .merge(winter, on=["DISTRICT", "YEAR"], how="left")
-                .merge(lags, on=["DISTRICT", "YEAR"], how="left")
+                .merge(prev, on=["DISTRICT", "YEAR"], how="left")
                 .merge(static, on="DISTRICT", how="left"))
 
-    # require core antecedents (drops first year per district: no lag-1)
     n0 = len(data)
     data = data.dropna(subset=["mam_T2M", "djf_T2M", "prev_monsoon_precip"]).reset_index(drop=True)
-
-    # ---- engineered features (after row filtering so anomalies use clean rows) ---- #
-    anom_cols = _add_anomalies(data, ANOM_COLS, TRAIN_MAX_YEAR)
-    data["mam_vpd"] = _vpd_kpa(data["mam_T2M"], data["mam_RH2M"]).round(4)
-    data["mam_djf_precip_ratio"] = (data["mam_PRECTOT"] / (data["djf_PRECTOT"] + 1.0)).round(4)
-    # deeper lags only NaN for the earliest year(s) per district -> neutral prior 0
-    data["prev2_monsoon_z"] = data["prev2_monsoon_z"].fillna(0.0)
-    data["roll3_monsoon_z"] = data["roll3_monsoon_z"].fillna(0.0)
-
-    engineered = anom_cols + ["mam_vpd", "mam_djf_precip_ratio",
-                              "prev2_monsoon_z", "roll3_monsoon_z"]
 
     summary = {
         "rows_total": int(n0), "rows_modelable": int(len(data)),
@@ -255,8 +187,6 @@ def process(df: pd.DataFrame) -> tuple:
         "drought_rate_train": round(float(data[data.YEAR <= TRAIN_MAX_YEAR].drought.mean()), 4),
         "drought_rate_test": round(float(data[data.YEAR > TRAIN_MAX_YEAR].drought.mean()), 4),
         "threshold_z": DROUGHT_Z, "train_max_year": TRAIN_MAX_YEAR,
-        "n_engineered_features": len(engineered),
-        "engineered_features": engineered,
     }
     return data, summary
 
@@ -274,7 +204,7 @@ def main() -> None:
     print(f"   DQI before={dqi['before']['dqi']}  after={dqi['after']['dqi']}  "
           f"dropped={len(dqi['dropped_redundant_columns'])} collinear cols")
 
-    print("3) Processing (seasonal aggregation + engineered leakage-free features) ...")
+    print("3) Processing (seasonal aggregation + leakage-free label) ...")
     data, summary = process(cleaned)
     data.to_csv(OUT_CSV, index=False)
     (REPORTS / "eda_summary.json").write_text(json.dumps(summary, indent=2))
@@ -282,8 +212,9 @@ def main() -> None:
     print(f"   wrote {OUT_CSV.relative_to(ROOT)}  shape={data.shape}")
     print(f"   drought rate: overall={summary['drought_rate_overall']:.0%} "
           f"train={summary['drought_rate_train']:.0%} test={summary['drought_rate_test']:.0%}")
-    print(f"   engineered {summary['n_engineered_features']} new features:",
-          ", ".join(summary["engineered_features"]))
+    print("   feature columns:",
+          [c for c in data.columns if c not in
+           ("DISTRICT", "YEAR", "monsoon_precip", "monsoon_z", "drought")])
 
 
 if __name__ == "__main__":
