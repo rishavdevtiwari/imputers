@@ -1,0 +1,2 @@
+# Cached raw datasets land here (NASA POWER, SoilGrids, MoALD, Kalimati).
+# Tracked as empty so the directory exists; actual data is git-ignored.

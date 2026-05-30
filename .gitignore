@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Models / cached data (keep dirs via .gitkeep, ignore contents)
+data/raw/*
+data/clean/*
+!data/raw/.gitkeep
+!data/clean/.gitkeep
+*.joblib
+*.pkl
+
+# Reports (keep dir, ignore generated json)
+reports/*
+!reports/.gitkeep
+
+# OS / editor
+.DS_Store
+.ipynb_checkpoints/
