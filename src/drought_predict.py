@@ -21,8 +21,8 @@ FEATURES_PATH = ROOT / "models" / "drought_features.joblib"
 DATA_PATH = ROOT / "data" / "processed" / "drought_dataset.csv"
 
 _SETUP_HINT = ("Artifacts not found. Build them first:\n"
-               "  python3 src/build_dataset.py\n"
-               "  python3 src/model_selection.py")
+               "  python3 src/drought_build_dataset.py\n"
+               "  python3 src/drought_model_selection.py")
 
 
 def artifacts_exist() -> bool:

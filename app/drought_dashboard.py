@@ -20,7 +20,7 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.predict_drought import (artifacts_exist, load_artifacts,  # noqa: E402
+from src.drought_predict import (artifacts_exist, load_artifacts,  # noqa: E402
                                  load_dataset, predict_district)
 
 REPORTS = ROOT / "reports"
@@ -37,7 +37,7 @@ st.caption("Predicting a weak monsoon (Jun-Sep) per district from pre-monsoon cl
 if not artifacts_exist():
     st.error(
         "Model/data not found. Build them first from the repo root:\n\n"
-        "```\npython3 src/build_dataset.py\npython3 src/model_selection.py\n```"
+        "```\npython3 src/drought_build_dataset.py\npython3 src/drought_model_selection.py\n```"
     )
     st.stop()
 

@@ -7,8 +7,8 @@ potato season.
 
 Reproduce everything:
 ```bash
-python3 src/build_dataset.py      # clean + process -> data/processed/drought_dataset.csv + reports/
-python3 src/model_selection.py    # baseline + models -> models/ + reports/model_comparison.json
+python3 src/drought_build_dataset.py      # clean + process -> data/processed/drought_dataset.csv + reports/
+python3 src/drought_model_selection.py    # baseline + models -> models/ + reports/model_comparison.json
 ```
 
 ---
