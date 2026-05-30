@@ -11,5 +11,23 @@
   "drought_rate_train": 0.2632,
   "drought_rate_test": 0.2,
   "threshold_z": -0.8,
-  "train_max_year": 2009
+  "train_max_year": 2009,
+  "n_engineered_features": 15,
+  "engineered_features": [
+    "mam_PRECTOT_z",
+    "mam_RH2M_z",
+    "mam_QV2M_z",
+    "mam_T2M_z",
+    "mam_T2M_MAX_z",
+    "mam_T2M_RANGE_z",
+    "mam_PS_z",
+    "mam_WS10M_z",
+    "djf_PRECTOT_z",
+    "djf_RH2M_z",
+    "djf_T2M_z",
+    "mam_vpd",
+    "mam_djf_precip_ratio",
+    "prev2_monsoon_z",
+    "roll3_monsoon_z"
+  ]
 }
