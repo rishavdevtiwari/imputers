@@ -1,0 +1,15 @@
+{
+  "rows_total": 2418,
+  "rows_modelable": 2356,
+  "dropped_no_antecedent": 62,
+  "year_range": [
+    1982,
+    2019
+  ],
+  "n_districts": 62,
+  "drought_rate_overall": 0.2466,
+  "drought_rate_train": 0.2632,
+  "drought_rate_test": 0.2,
+  "threshold_z": -0.8,
+  "train_max_year": 2009
+}
